@@ -17,13 +17,13 @@ app.use("/customer/auth/*", function auth(req, res, next){
     
     if (authorization) {
         const token = authorization[TOKEN_KEY];
-        
+
         jwt.verify(token, SECRET_KEY, (err, user) => {
             if (!err) {
                 req.user = user;
                 next();
             } else {
-                return res.status(403).json({message: "User not authenticated"});
+                return res.status(403).json({message: "User not authenticated: " + err});
             }
         })
     } else {
@@ -31,7 +31,7 @@ app.use("/customer/auth/*", function auth(req, res, next){
     }
 });
  
-const PORT =5000;
+const PORT =3000;
 
 app.use("/customer", customer_routes);
 app.use("/", genl_routes);
