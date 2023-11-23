@@ -39,16 +39,25 @@ public_users.post("/register", (req, res) => {
   
 });
 
+
+
+
+
+async function getAllBooks() {
+  return books
+}
+
 // Get the book list available in the shop
 public_users.get('/', async (req, res) => {
-  const result = isbns().map(isbn => books[isbn]);
-  res.send(await result);
+  const result = await getAllBooks();
+  res.send(result);
 });
+
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn', (req, res) => {
   const isbn = req.params.isbn;
-  const result = new Promise((resolve, reject) => {
+  const result = new Promise((resolve) => {
     resolve(books[isbn]);
   })
 
@@ -56,39 +65,70 @@ public_users.get('/isbn/:isbn', (req, res) => {
     if (bookByIsbn) {
       res.send(bookByIsbn);
     } else {
-      return res.status(404).json({message: "Unable to find book with isbn: " + isbn});
+      return res.status(404).json({ message: "Unable to find book with isbn: " + isbn });
     }
   })
- });
+});
   
+
+function getBooksWithIsbnsByAuthor(author) {
+  return Object.entries(books)
+    .filter(([_, book]) => book.author === author)
+    .map(([isbn, book]) => {
+      return {
+        isbn: isbn,
+        title: book.title,
+        reviews: book.reviews
+      }
+    })
+}
+
+
 // Get book details based on author
 public_users.get('/author/:author', (req, res) => {
   const author = req.params.author;
-  const result = new Promise((resolve, reject) => {
-    resolve(isbns().find(isbn => books[isbn].author === author))
+
+  const result = new Promise((resolve) => {
+    const authorBooksWithIds = getBooksWithIsbnsByAuthor(author)
+    resolve(authorBooksWithIds)
   });
-  result.then((bookIsbn) => {
-    if (bookIsbn) {
-      res.send(books[bookIsbn]);
+
+  result.then((booksByAuthors) => {
+    if (booksByAuthors) {
+      res.send({ booksByAuthor: booksByAuthors });
     } else {
-      return res.status(404).json({message: `Unable to find book for author: ${author}`});
+      return res.status(404).json({ message: `Unable to find book for author: ${author}` });
     }
   })
-  
+
 });
+
+function getBooksWithIsbnsByTitle(title) {
+  return Object.entries(books)
+     .filter(([_, book]) => book.title === title)
+     .map(([isbn, book]) => {
+       return {
+         isbn: isbn,
+         author: book.author,
+         reviews: book.reviews
+       }
+     })
+ }
 
 // Get all books based on title
 public_users.get('/title/:title', (req, res) => {
   const title = req.params.title;
+
   const result = new Promise((resolve) => {
-    const bookIsbn = isbns().find(isbn => books[isbn].title === title);
-    resolve(bookIsbn);
+    const booksWithIdsByTitle = getBooksWithIsbnsByTitle(title)
+    resolve(booksWithIdsByTitle);
   })
-  result.then((bookIsbn) => {
-    if (bookIsbn) {
-      res.send(books[bookIsbn]);
+
+  result.then((booksByTitle) => {
+    if (booksByTitle) {
+      res.send({ booksByTitle: booksByTitle });
     } else {
-      return res.status(404).json({message: `Unable to find book for title: ${title}`});
+      return res.status(404).json({ message: `Unable to find book for title: ${title}` });
     }
   })
 });

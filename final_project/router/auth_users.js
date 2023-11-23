@@ -38,7 +38,7 @@ regd_users.post("/login", (req,res) => {
     return res.status(200).send(accessToken);
   }
   
-  return res.status(208).json({message: "Invalid username or password"});
+  return res.status(403).json({message: "Invalid username or password"});
 });
 
 // Add a book review
@@ -55,14 +55,14 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
     
     if (reviewsIds.length > 0) {
       const userReviewId = reviewsIds.find(id => reviews[id].user === username)
-      if (isUserAddedReview) {
+      if (userReviewId) {
         reviews[userReviewId].review = newReview;
       } else {
-        const lastId = Math.math(reviewsIds);
-        reviews[lastId + 1] = { username: username, review: newReview };
+        const lastId = Math.max(reviewsIds);
+        reviews[lastId + 1] = { user: username, review: newReview };
       }
     } else {
-      reviews[1] = { username: username, review: newReview }
+      reviews[1] = { user: username, review: newReview }
     }
     res.send(book);
 
